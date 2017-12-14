@@ -57,3 +57,7 @@ typings/
 # dotenv environment variables file
 .env
 
+raw/
+secrets.md
+nps_boundary.json
+nps_boundary.ndjson

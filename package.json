@@ -1,0 +1,31 @@
+{
+  "name": "national-parks",
+  "version": "0.0.1",
+  "description": "A viz project chronicling the history of national parks in the US",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "process-raw": "shp2json ./raw/nps_boundary/nps_boundary.shp -o nps_boundary.json",
+    "isolate-features": "ndjson-split 'd.features.filter(f => (/^(National Park|National Monument)$|(wilderness)/ig).test(f.properties.UNIT_TYPE)).map(f => `${f.properties.UNIT_CODE} - ${f.properties.UNIT_NAME} - ${f.properties.UNIT_TYPE}`)' < nps_boundary.json > nps_boundary.ndjson"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codyrushing/national-parks.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/codyrushing/national-parks/issues"
+  },
+  "homepage": "https://github.com/codyrushing/national-parks#readme",
+  "devDependencies": {
+    "d3-geo-projection": "^2.3.1",
+    "ndjson-cli": "^0.3.1"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.2",
+    "request": "^2.83.0",
+    "request-promise": "^4.2.2",
+    "shapefile": "^0.6.6"
+  }
+}
