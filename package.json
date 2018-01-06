@@ -8,12 +8,13 @@
     "ndjson-data": "ndjson-split < data/parks.json > data/parks.ndjson",
     "csv-data": "json2csv -i data/parks.json -f id,name,type,date_established,acreage,detail_page_url -o data/parks.csv",
     "scrape-wikipedia": "node ./scrapers/park-data-wikipedia; ndjson-split < data/parks.json > data/parks.ndjson",
-    "process-raw": "shp2json ./raw/nps_boundary/nps_boundary.shp -o data/nps_boundary.json; shp2json ./raw/S_USA.AdministrativeForest/S_USA.AdministrativeForest.shp -o data/forest_boundary.json",
-    "filter-features": "ndjson-split 'd.features.filter(f => (/^(National Park|National Monument)$|(wilderness)/ig).test(f.properties.UNIT_TYPE))' < data/nps_boundary.json > data/nps_boundary.ndjson",
+    "process-shapefiles": "shp2json ./raw/nps_boundary/nps_boundary.shp -o data/nps_boundary.json; shp2json ./raw/S_USA.AdministrativeForest/S_USA.AdministrativeForest.shp -o data/forest_boundary.json",
+    "apply-projections": "geoproject 'd3.geoAlbersUsa()' data/nps_boundary.json > data/nps_boundary_albersusa.json",
+    "filter-features": "ndjson-split 'd.features.filter(f => (/^(National Park|National Monument|National Preserve|National Seashore|National Lakeshore)$|(wilderness)/ig).test(f.properties.UNIT_TYPE))' < data/nps_boundary_albersusa.json > data/nps_boundary_albersusa.ndjson",
     "filter-features:forests": "ndjson-split 'd.features.filter(f => !(/^National Forests/).test(f.properties.FORESTNAME))' < data/forests_boundary.json > data/forests_boundary.ndjson",
-    "remove-unneeded-properties": "ndjson-map 'd.id = d.properties.UNIT_NAME.toLowerCase().normalize(\"NFD\").replace(/[\u0300-\u036f]|[^a-z]/g, \"\"), delete d.geometry, delete d.properties, d' < data/nps_boundary.ndjson > data/nps_boundary_clean.ndjson",
-    "remove-unneeded-properties:forests": "ndjson-map 'd.id = d.properties.FORESTNAME.replace(/( National Forests?$)|(National \\w+ Area$)/g, \"\").split(/,|&|\\sand\\s/g)[0].replace(/ /g, \"\").toLowerCase().normalize(\"NFD\").replace(/[\u0300-\u036f]|[^a-z]/g, \"\"), delete d.geometry, delete d.properties, d' < data/forests_boundary.ndjson > data/forests_boundary_clean.ndjson",
-    "join-data": "ndjson-join 'd.id' data/parks.ndjson data/nps_boundary_clean.ndjson > data/nps_boundary_joined.ndjson"
+    "remove-unneeded-properties:forests": "ndjson-map 'd.id = d.properties.FORESTNAME.replace(/( National Forests?$)|(National \\w+ Area$)/g, \"\").split(/,|&|\\sand\\s/g)[0].replace(/ /g, \"\").toLowerCase().normalize(\"NFD\").replace(/[̀-ͯ]|[^a-z]/g, \"\"), delete d.geometry, delete d.properties, d' < data/forests_boundary.ndjson > data/forests_boundary_clean.ndjson",
+    "reassemble-geojson": "ndjson-reduce 'p.features.push(d), p' '{type: \"FeatureCollection\", features: []}' < data/nps_boundary_albersusa_clean.ndjson > data/nps_boundary_albersusa_clean.json",
+    "build-svg": "geo2svg --stroke \"none\" -n -o data/nps_boundary_albersusa_clean.svg data/nps_boundary_albersusa_clean.ndjson"
   },
   "repository": {
     "type": "git",
@@ -33,6 +34,7 @@
   },
   "dependencies": {
     "cheerio": "^1.0.0-rc.2",
+    "d3": "^4.12.0",
     "request": "^2.83.0",
     "request-promise": "^4.2.2",
     "shapefile": "^0.6.6"
