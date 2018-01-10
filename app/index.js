@@ -20,7 +20,7 @@ class App {
 
   fetch(){
     d3_request.json(
-      `${host}/data/states.json`,
+      `${host}/data/states.topo.json`,
       (err, states) => {
         if(err) throw err;
 
