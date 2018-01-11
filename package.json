@@ -37,10 +37,15 @@
     "d3-request": "^1.0.6",
     "d3-selection": "^1.2.0",
     "express": "^4.16.2",
+    "express-handlebars": "^3.0.0",
+    "handlebars-helpers": "^0.10.0",
     "lodash.throttle": "^4.1.1",
+    "marked": "^0.3.12",
     "request": "^2.83.0",
     "request-promise": "^4.2.2",
     "shapefile": "^0.6.6",
-    "topojson-client": "^3.0.0"
+    "topojson-client": "^3.0.0",
+    "yaml-front-matter": "^3.4.0",
+    "yfm": "^0.2.0"
   }
 }
