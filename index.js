@@ -1,7 +1,6 @@
 const path = require('path');
 const fs = require('fs');
-const yfm = require('yfm');
-const yamlFrontMatter = require('yaml-front-matter');
+const matter = require('gray-matter');
 const express = require('express');
 const app = express();
 const handlebars = require('handlebars');
@@ -20,37 +19,20 @@ const hbs = exphbs.create({
   partialsDir: path.join(VIEWS_PATH, '_partials')
 });
 
-// https://github.com/ericf/express-handlebars/issues/179
-hbs._compileTemplate = function (template, options) {
-    var parsed = yfm(template); //parse yfm
-    var compiled = this.handlebars.compile(parsed.content, options); //compile without yfm
-    compiled.yfm = parsed.context;
-    return compiled;
-};
-
-hbs._precompileTemplate = function (template, options) {
-    var parsed = yfm(template); //parse yfm
-    var compiled = this.handlebars.precompile(parsed.content, options); //compile without yfm
-    compiled.yfm = parsed.context;
-    return compiled;
-};
-
-hbs._renderTemplate = function (template, context, options) {
-    // merge yaml front matter into context
-    context = {
-      ...context,
-      ...template.yfm
-    };
-    return template(context, options);
-};
-
-
 app.enable('view cache');
 app.engine('hbs', hbs.engine);
 app.set('views', VIEWS_PATH);
 app.set('view engine', 'hbs');
 
 // TODO, make this look recursively through subdirs
+const pageMetadata = {};
+const getPageMetadata = path => {
+  if(!pageMetadata[path]){
+    pageMetadata[path] = matter.read(path, {delims: ['{{!--', '--}}']}).data;
+  }
+  return pageMetadata[path];
+};
+
 const pages = fs.readdirSync(path.join(__dirname, VIEWS_PATH));
 pages.forEach(
   page => {
@@ -60,7 +42,7 @@ pages.forEach(
     const pageName = path.basename(page, '.hbs');
     const route = pageName === 'index' ? '' : pageName;
     app.get(`/${route}`, (req, res, next) => {
-      return res.render(pageName);
+      return res.render(pageName, getPageMetadata(path.join(VIEWS_PATH, page)));
     });
   }
 );
