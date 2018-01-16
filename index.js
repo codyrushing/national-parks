@@ -1,4 +1,5 @@
 const path = require('path');
+const port = 3000;
 const fs = require('fs');
 const matter = require('gray-matter');
 const express = require('express');
@@ -49,4 +50,7 @@ pages.forEach(
 
 app.use(express.static(__dirname + '/public'));
 
-app.listen(3000);
+app.listen(port, err => {
+  if(err) throw err;
+  console.log(`Server listening on port ${port}`);
+});
