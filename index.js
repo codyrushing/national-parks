@@ -1,5 +1,5 @@
 const path = require('path');
-const port = 3000;
+const port = 3030;
 const fs = require('fs');
 const matter = require('gray-matter');
 const express = require('express');
@@ -42,9 +42,10 @@ pages.forEach(
     }
     const pageName = path.basename(page, '.hbs');
     const route = pageName === 'index' ? '' : pageName;
-    app.get(`/${route}`, (req, res, next) => {
-      return res.render(pageName, getPageMetadata(path.join(VIEWS_PATH, page)));
-    });
+    app.get(
+      `/${route}`,
+      (req, res, next) => res.render(pageName, getPageMetadata(path.join(VIEWS_PATH, page)))
+    );
   }
 );
 

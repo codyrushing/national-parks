@@ -1,0 +1,22 @@
+{
+  "js": [
+    {
+      "src": "src/js/app.js",
+      "dest": "public/js/app.js"
+    },
+    {
+      "src": "src/js/protected-lands.js",
+      "dest": "public/js/protected-lands.js"
+    }
+  ],
+  "css": [
+    {
+      "src": "src/styles/main.less",
+      "dest": "public/css/main.css"
+    },
+    {
+      "src": "src/styles/protected-lands.less",
+      "dest": "public/css/protected-lands.css"
+    }
+  ]
+}

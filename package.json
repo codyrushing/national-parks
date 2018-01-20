@@ -8,10 +8,10 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node .",
+    "dev": "node dev.js",
     "dev:server": "nodemon --ignore src/js --ignore public --ext js,hbs .",
-    "dev:css": "less-watch-compiler --include-path node_modules/ src/styles public/css main.less",
-    "dev:js": "watchify src/js/main.js -t babelify -o public/js/app.js --debug --verbose"
+    "dev:css": "less-watch-compiler --include-path node_modules/ src/styles public/css protected-lands.less",
+    "dev:js": "watchify src/js/app.js -t babelify -o public/js/protected-lands.js --debug --verbose"
   },
   "browserify": {
     "options": {
@@ -41,7 +41,6 @@
     "less-watch-compiler": "^1.10.2",
     "linebyline": "^1.3.0",
     "ndjson-cli": "^0.3.1",
-    "nodemon": "^1.14.11",
     "topojson": "^3.0.2",
     "watchify": "^3.9.0"
   },

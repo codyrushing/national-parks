@@ -8,7 +8,7 @@ const host = `${window.location.protocol}//${window.location.host}`;
 const mapWidth = 900;
 const mapHeight = 500;
 
-class App {
+class ProtectedLandsApp {
   constructor(){
     this.ready = this.ready.bind(this);
     this.fitToSize = this.fitToSize.bind(this);
@@ -20,7 +20,7 @@ class App {
 
   fetch(){
     d3_request.json(
-      `${host}/data/states.topo.json`,
+      `${host}/states.topo.json`,
       (err, states) => {
         if(err) throw err;
 
@@ -66,4 +66,4 @@ class App {
 
 };
 
-new App();
+new ProtectedLandsApp();
