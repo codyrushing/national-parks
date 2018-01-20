@@ -64,3 +64,4 @@ nps_boundary.ndjson
 data/
 public/js
 public/css
+public/*.topo.json

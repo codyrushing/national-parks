@@ -1,6 +1,7 @@
 const path = require('path');
 const port = 3030;
 const fs = require('fs');
+const compression = require('compression');
 const matter = require('gray-matter');
 const express = require('express');
 const app = express();
@@ -33,6 +34,8 @@ const getPageMetadata = path => {
   }
   return pageMetadata[path];
 };
+
+app.use(compression());
 
 const pages = fs.readdirSync(path.join(__dirname, VIEWS_PATH));
 pages.forEach(

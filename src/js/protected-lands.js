@@ -19,6 +19,7 @@ class ProtectedLandsApp {
   }
 
   fetch(){
+    // request and draw states
     d3_request.json(
       `${host}/states.topo.json`,
       (err, states) => {
@@ -43,18 +44,43 @@ class ProtectedLandsApp {
             );
       }
     );
+
+    d3_request.json(
+      `${host}/lands.topo.json`,
+      (err, lands) => {
+        if(err) throw err;
+        this.landsGroup
+          .selectAll('path')
+          .data(topojson.feature(lands, lands.objects.lands).features)
+          .enter()
+          .append('path')
+          .attr('id', d => d.id)
+          .attr('stroke', '#fff')
+          .attr('stroke-width', 0.1)
+          .attr('fill', d => d.properties.fill)
+          .attr(
+            'd',
+            this.pathGenerator
+          );
+
+      }
+    )
   }
 
   ready(){
-    this.svg = d3_selection.select(document.body)
+    this.svg = d3_selection.select('#map-container')
       .append('svg')
       .attr('viewBox', `0 0 ${mapWidth} ${mapHeight}`)
-      .attr('class', 'public-lands')
+      .attr('class', 'protected-lands')
       .style('width', '100%');
 
     this.statesGroup = this.svg
       .append('g')
       .attr('class', 'states');
+
+    this.landsGroup = this.svg
+      .append('g')
+      .attr('class', 'lands');
 
   }
 

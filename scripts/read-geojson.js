@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path')
-const reader = fs.createReadStream(path.resolve(__dirname, '../data/nps_boundary_clean.json'), { encoding: 'utf-8' });
+const reader = fs.createReadStream(path.resolve(__dirname, '../data/protected_lands.ndjson'), { encoding: 'utf-8' });
 
 var count = 0;
 reader.on(

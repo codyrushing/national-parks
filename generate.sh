@@ -16,6 +16,9 @@ ndjson-split 'd.features.filter(f => (/^(National Park|National Monument|Nationa
 ndjson-split 'd.features.filter(f => !(/^National Forests/).test(f.properties.FORESTNAME))' < data/fs_boundary_albersusa.json > data/fs_boundary_albersusa.ndjson
 # remove unneeded feature data, and add id and colors to be used on front-end, and merge NPS and Forest Service features
 node scripts/clean-data.js;
-# reassemble geojson
-ndjson-reduce 'p.features.push(d), p' '{type: \"FeatureCollection\", features: []}' < data/protected_lands.ndjson > data/protected_lands.json;
-geo2svg --stroke "none" -n -o data/protected_lands.svg data/protected_lands.ndjson
+# generate topojson
+geo2topo -n lands=./data/protected_lands.ndjson \
+  | toposimplify -p 0.2 -f \
+  | topoquantize 1e5 > public/lands.topo.json
+
+# geo2svg --stroke "none" -n -o data/protected_lands.svg data/protected_lands.ndjson

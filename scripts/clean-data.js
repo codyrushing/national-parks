@@ -45,13 +45,19 @@ readline( path.join(__dirname, '../data/nps_boundary_albersusa.ndjson'), { maxLi
     console.error
   );
 
-readline( path.join(__dirname, '../data/fs_boundary_albersusa.ndjson'), { maxLineLength: 1024 * 10000} )
+// maxLineLength has to be huge for some of these features which are much too large
+readline( path.join(__dirname, '../data/fs_boundary_albersusa.ndjson'), { maxLineLength: 1024 * 100000} )
   .on(
     'line',
     line => {
-      line = JSON.parse(line);
-      const type = 'forest';
-      const slug = slugify(line.properties.FORESTNAME.replace(/( National Forests?$)|(National \\w+ Area$)/g, "").split(/,|&|\sand\s/g)[0].replace(/ /g, ""));
-      addFeaturesAndWrite(line, slug, type);
+      try {
+        line = JSON.parse(line);
+        const type = 'forest';
+        const slug = slugify(line.properties.FORESTNAME.replace(/( National Forests?$)|(National \\w+ Area$)/g, "").split(/,|&|\sand\s/g)[0].replace(/ /g, ""));
+        addFeaturesAndWrite(line, slug, type);
+      } catch(err) {
+        // console.error(line);
+        console.error(err);
+      }
     }
   )
