@@ -55,8 +55,6 @@ class ProtectedLandsApp {
           .enter()
           .append('path')
           .attr('id', d => d.id)
-          .attr('stroke', '#fff')
-          .attr('stroke-width', 0.1)
           .attr('fill', d => d.properties.fill)
           .attr(
             'd',
@@ -68,7 +66,20 @@ class ProtectedLandsApp {
   }
 
   ready(){
-    this.svg = d3_selection.select('#map-container')
+    this.container = d3_selection.select('#public-lands-app');
+
+    // map container
+    this.mapContainer = this.container
+      .append('div')
+      .attr('class', 'map-container');
+
+    // detail panel
+    this.detailPanel = this.container
+      .append('div')
+      .attr('class', 'lands-panel')
+
+    // build SVG
+    this.svg = this.mapContainer
       .append('svg')
       .attr('viewBox', `0 0 ${mapWidth} ${mapHeight}`)
       .attr('class', 'protected-lands')

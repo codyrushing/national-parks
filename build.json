@@ -15,7 +15,7 @@
       "dest": "public/css/main.css"
     },
     {
-      "src": "src/styles/protected-lands.less",
+      "src": "src/styles/protected-lands/protected-lands.less",
       "dest": "public/css/protected-lands.css"
     }
   ]
