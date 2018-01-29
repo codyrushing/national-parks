@@ -5,7 +5,7 @@
       "dest": "public/js/app.js"
     },
     {
-      "src": "src/js/protected-lands.js",
+      "src": "src/js/protected-lands/index.js",
       "dest": "public/js/protected-lands.js"
     }
   ],

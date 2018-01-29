@@ -1,7 +1,9 @@
 import * as d3_request from 'd3-request';
 import * as d3_selection from 'd3-selection';
 import * as d3_geo from 'd3-geo';
+import * as d3_zoom from 'd3-zoom';
 import * as topojson from 'topojson-client';
+import noUiSlider from 'nouislider'
 import throttle from 'lodash.throttle';
 
 const host = `${window.location.protocol}//${window.location.host}`;
@@ -11,9 +13,9 @@ const mapHeight = 500;
 class ProtectedLandsApp {
   constructor(){
     this.ready = this.ready.bind(this);
-    this.fitToSize = this.fitToSize.bind(this);
+    this.fitToWindow = this.fitToWindow.bind(this);
     document.addEventListener('DOMContentLoaded', this.ready);
-    window.addEventListener('resize', throttle(this.fitToSize, 300));
+    window.addEventListener('resize', throttle(this.fitToWindow, 300));
     this.pathGenerator = d3_geo.geoPath();
     this.fetch();
   }
@@ -67,16 +69,26 @@ class ProtectedLandsApp {
 
   ready(){
     this.container = d3_selection.select('#public-lands-app');
+    this.buildMapSkeleton();
+    this.buildPanel();
+  }
 
+  buildMapSkeleton(){
+    const zoom = d3_zoom.zoom()
+        .scaleExtent([1, 8])
+        .on(
+          'zoom',
+          () => {
+            this.g.attr(
+              'transform',
+              d3_selection.event.transform
+            );
+          }
+        );
     // map container
     this.mapContainer = this.container
       .append('div')
       .attr('class', 'map-container');
-
-    // detail panel
-    this.detailPanel = this.container
-      .append('div')
-      .attr('class', 'lands-panel')
 
     // build SVG
     this.svg = this.mapContainer
@@ -85,17 +97,64 @@ class ProtectedLandsApp {
       .attr('class', 'protected-lands')
       .style('width', '100%');
 
-    this.statesGroup = this.svg
+    this.g = this.svg.append('g');
+
+    this.svg
+      .call(zoom)
+      .on('wheel.zoom', null);
+
+    this.statesGroup = this.g
       .append('g')
       .attr('class', 'states');
 
-    this.landsGroup = this.svg
+    this.landsGroup = this.g
       .append('g')
       .attr('class', 'lands');
+  }
+
+  buildPanel(){
+    // detail panel
+    this.detailPanel = this.container
+      .append('div')
+      .attr('class', 'lands-panel');
+
+    this.rangeContainer = this.detailPanel
+      .append('div')
+      .attr('class', 'range');
+
+    this.buildRangeSlider();
+  }
+
+  buildRangeSlider(){
+    if(this.rangeSlider){
+      this.rangeSlider.destroy();
+    };
+
+    const isLandscape = window.innerWidth / window.innerHeight > 1;
+
+    this.rangeContainer.style('height', isLandscape ? '300px' : null);
+
+    this.rangeSlider = noUiSlider.create(
+      this.rangeContainer.node(),
+      {
+        start: [1895, 1950],
+        orientation: isLandscape ? 'vertical' : 'horizontal',
+        direction: isLandscape ? 'rtl' : 'ltr',
+        connect: true,
+        step: 1,
+        tooltips: true,
+        range: {
+          min: 1895,
+          max: 2013
+        }
+      }
+    );
 
   }
 
-  fitToSize(){
+  fitToWindow(){
+    this.buildRangeSlider();
+
     // this.svg
     //   .attr('width', window.innerWidth)
     //   .attr('height', window.innerWidth / aspectRatio);
