@@ -79,9 +79,13 @@ class ProtectedLandsApp {
         .on(
           'zoom',
           () => {
+            const svgNode = this.svg.node();
+            const {x, y, k} = d3_selection.event.transform;
+            const tx = Math.min(0, Math.max(x, mapWidth - mapWidth*k));
+            const ty = Math.min(0, Math.max(y, mapHeight - mapHeight*k));
             this.g.attr(
               'transform',
-              d3_selection.event.transform
+              `translate(${tx},${ty})scale(${k})`
             );
           }
         );
@@ -110,6 +114,20 @@ class ProtectedLandsApp {
     this.landsGroup = this.g
       .append('g')
       .attr('class', 'lands');
+
+    // zoom buttons
+    this.buttonContainer = this.mapContainer
+      .append('div')
+      .attr('class', 'buttons-container');
+
+    this.zoomOutButton = this.buttonContainer
+      .append('button')
+      .attr('class', 'zoom-out');
+
+    this.zoomInButton = this.buttonContainer
+      .append('button')
+      .attr('class', 'zoom-in');
+
   }
 
   buildPanel(){

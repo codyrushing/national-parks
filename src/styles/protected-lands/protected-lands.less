@@ -1,5 +1,24 @@
 @import (less) '../../../node_modules/nouislider/distribute/nouislider.css';
 
+.map-container {
+  position: relative;
+  .buttons-container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    button {
+      width: 2em;
+    }
+    .zoom-in:before {
+      content: '+';
+    }
+    .zoom-out:before {
+      content: '—';
+      display: block;
+    }
+  }
+}
+
 .protected-lands {
   .lands {
     &:hover {
@@ -16,5 +35,9 @@
         fill-opacity: 1;
       }
     }
+    // path,
+    // line {
+    //   shape-rendering: crispEdges;
+    // }
   }
 }
