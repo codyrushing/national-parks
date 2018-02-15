@@ -3,8 +3,8 @@ import * as d3_selection from 'd3-selection';
 import * as d3_geo from 'd3-geo';
 import * as d3_zoom from 'd3-zoom';
 import * as topojson from 'topojson-client';
-import noUiSlider from 'nouislider'
 import throttle from 'lodash.throttle';
+import DateRangeManager from './date-range-manager';
 
 const host = `${window.location.protocol}//${window.location.host}`;
 const mapWidth = 900;
@@ -21,7 +21,7 @@ class ProtectedLandsApp {
   }
 
   fetch(){
-    // request and draw states
+    // states topojson data
     d3_request.json(
       `${host}/states.topo.json`,
       (err, states) => {
@@ -47,6 +47,7 @@ class ProtectedLandsApp {
       }
     );
 
+    // lands topojson geodata
     d3_request.json(
       `${host}/lands.topo.json`,
       (err, lands) => {
@@ -61,10 +62,21 @@ class ProtectedLandsApp {
           .attr(
             'd',
             this.pathGenerator
+          )
+          .on(
+            'click',
+            d => {
+              console.log(d.id);
+            }
           );
 
       }
-    )
+    );
+
+    // lands metadata
+    // d3_request.json(
+    //   `${host}/lands.json`
+    // )
   }
 
   ready(){
@@ -74,12 +86,15 @@ class ProtectedLandsApp {
   }
 
   buildMapSkeleton(){
-    const zoom = d3_zoom.zoom()
+    this.zoom = d3_zoom.zoom()
         .scaleExtent([1, 8])
+        .translateExtent([
+          [0, 0],
+          [mapWidth, mapHeight]
+        ])
         .on(
           'zoom',
           () => {
-            const svgNode = this.svg.node();
             const {x, y, k} = d3_selection.event.transform;
             const tx = Math.min(0, Math.max(x, mapWidth - mapWidth*k));
             const ty = Math.min(0, Math.max(y, mapHeight - mapHeight*k));
@@ -104,7 +119,8 @@ class ProtectedLandsApp {
     this.g = this.svg.append('g');
 
     this.svg
-      .call(zoom)
+      .call(this.zoom)
+      // don't zoom on scroll
       .on('wheel.zoom', null);
 
     this.statesGroup = this.g
@@ -122,12 +138,18 @@ class ProtectedLandsApp {
 
     this.zoomOutButton = this.buttonContainer
       .append('button')
-      .attr('class', 'zoom-out');
+      .attr('class', 'zoom-out')
+      .on('click', () => this.programmaticZoom(false));
 
     this.zoomInButton = this.buttonContainer
       .append('button')
-      .attr('class', 'zoom-in');
+      .attr('class', 'zoom-in')
+      .on('click', () => this.programmaticZoom(true));
+  }
 
+  programmaticZoom(zoomIn=true){
+    const { k } = d3_zoom.zoomTransform(this.svg.node());
+    this.zoom.scaleTo(this.svg.transition(250), k + (zoomIn ? 1 : -1));
   }
 
   buildPanel(){
@@ -136,42 +158,20 @@ class ProtectedLandsApp {
       .append('div')
       .attr('class', 'lands-panel');
 
+    this.buildDateRangeManager();
+  }
+
+  buildDateRangeManager(){
     this.rangeContainer = this.detailPanel
       .append('div')
       .attr('class', 'range');
 
-    this.buildRangeSlider();
-  }
-
-  buildRangeSlider(){
-    if(this.rangeSlider){
-      this.rangeSlider.destroy();
-    };
-
-    const isLandscape = window.innerWidth / window.innerHeight > 1;
-
-    this.rangeContainer.style('height', isLandscape ? '300px' : null);
-
-    this.rangeSlider = noUiSlider.create(
-      this.rangeContainer.node(),
-      {
-        start: [1895, 1950],
-        orientation: isLandscape ? 'vertical' : 'horizontal',
-        direction: isLandscape ? 'rtl' : 'ltr',
-        connect: true,
-        step: 1,
-        tooltips: true,
-        range: {
-          min: 1895,
-          max: 2013
-        }
-      }
-    );
-
+    this.dateRangeManager = new DateRangeManager({
+      container: this.rangeContainer.node()
+    });
   }
 
   fitToWindow(){
-    this.buildRangeSlider();
 
     // this.svg
     //   .attr('width', window.innerWidth)

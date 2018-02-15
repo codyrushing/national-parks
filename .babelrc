@@ -1,9 +1,10 @@
 {
 	"presets": [
-		"env",
+		"env"
 	],
 	"plugins": [
 		"transform-object-rest-spread",
-		"extensible-destructuring"
+		"extensible-destructuring",
+		"transform-es2015-parameters"
 	]
 }

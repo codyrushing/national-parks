@@ -33,6 +33,7 @@
   "devDependencies": {
     "babel-core": "^6.26.0",
     "babel-plugin-extensible-destructuring": "^4.1.0",
+    "babel-plugin-transform-es2015-parameters": "^6.24.1",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-preset-env": "^1.6.1",
     "babelify": "^8.0.0",

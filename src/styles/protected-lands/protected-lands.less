@@ -4,10 +4,21 @@
   position: relative;
   .buttons-container {
     position: absolute;
-    top: 0;
-    right: 0;
+    top: 15px;
+    right: 15px;
     button {
       width: 2em;
+      background: #eee;
+      cursor: pointer;
+      + button {
+        border-left: none;
+      }
+      &:first-child {
+        border-radius: 5px 0 0 5px;
+      }
+      &:last-child {
+        border-radius: 0 5px 5px 0;
+      }
     }
     .zoom-in:before {
       content: '+';
@@ -17,27 +28,35 @@
       display: block;
     }
   }
-}
 
-.protected-lands {
-  .lands {
-    &:hover {
-      path {
-        fill-opacity: 0.2;
-      }
-    }
-    path {
-      cursor: pointer;
-      stroke: #fff;
-      stroke-width: 0.1px;
-      transition: all 0.2s ease-in-out;
+  .protected-lands {
+    // cursor: -webkit-grab;
+    // cursor: grab;
+    .lands {
       &:hover {
-        fill-opacity: 1;
+        path {
+          fill-opacity: 0.2;
+        }
       }
+      path {
+        cursor: pointer;
+        stroke: #fff;
+        stroke-width: 0.1px;
+        transition: all 0.2s ease-in-out;
+        &:hover {
+          fill-opacity: 1;
+        }
+      }
+      // path,
+      // line {
+      //   shape-rendering: crispEdges;
+      // }
     }
-    // path,
-    // line {
-    //   shape-rendering: crispEdges;
-    // }
   }
+
+  // &.grabbing .protected-lands {
+  //   cursor: -webkit-grabbing;
+  //   cursor: grabbing;
+  // }
+
 }

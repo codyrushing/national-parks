@@ -65,3 +65,4 @@ data/
 public/js
 public/css
 public/*.topo.json
+public/lands.json
