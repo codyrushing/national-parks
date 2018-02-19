@@ -4,6 +4,7 @@ import * as d3_geo from 'd3-geo';
 import * as d3_zoom from 'd3-zoom';
 import * as topojson from 'topojson-client';
 import throttle from 'lodash.throttle';
+import { requestJSON } from './utils';
 import DateRangeManager from './date-range-manager';
 
 const host = `${window.location.protocol}//${window.location.host}`;
@@ -22,39 +23,29 @@ class ProtectedLandsApp {
 
   fetch(){
     // states topojson data
-    d3_request.json(
-      `${host}/states.topo.json`,
-      (err, states) => {
-        if(err) throw err;
-
-        // this.statesGroup
-        //   .selectAll('path')
-        //   .data(topojson.feature(states, states.objects.states).features)
-        //   .enter()
-        //   .append('path')
-        //   .attr('fill', 'none')
-        //   .attr('stroke', '#ccc')
-        //   .attr('d', this.pathGenerator);
-
+    return Promise.all([
+      requestJSON('/states.topo.json'),
+      requestJSON('/lands.topo.json'),
+      requestJSON('/lands-metadata.csv', 'csv')
+    ])
+    .then(
+      ([
+        states,
+        landsTopoJson,
+        landsData
+      ]) => {
         this.statesGroup.append('path')
-            .attr('class', 'state-borders')
-            .attr('fill', 'none')
-            .attr('stroke', '#ddd')
-            .attr(
-              'd',
-              this.pathGenerator(topojson.mesh(states, states.objects.states))
-            );
-      }
-    );
+          .attr('class', 'state-borders')
+          .attr('fill', 'none')
+          .attr('stroke', '#ddd')
+          .attr(
+            'd',
+            this.pathGenerator(topojson.mesh(states, states.objects.states))
+          );
 
-    // lands topojson geodata
-    d3_request.json(
-      `${host}/lands.topo.json`,
-      (err, lands) => {
-        if(err) throw err;
         this.landsGroup
           .selectAll('path')
-          .data(topojson.feature(lands, lands.objects.lands).features)
+          .data(topojson.feature(landsTopoJson, landsTopoJson.objects.lands).features)
           .enter()
           .append('path')
           .attr('id', d => d.id)
@@ -70,13 +61,17 @@ class ProtectedLandsApp {
             }
           );
 
+        this.landsData = landsData.map(
+          l => {
+            return {
+              ...l,
+              date_established: new Date(l.date_established)
+            };
+          }
+        );
+        console.log(this.landsData);
       }
-    );
-
-    // lands metadata
-    // d3_request.json(
-    //   `${host}/lands.json`
-    // )
+    )
   }
 
   ready(){
@@ -87,25 +82,31 @@ class ProtectedLandsApp {
 
   buildMapSkeleton(){
     this.zoom = d3_zoom.zoom()
-        .scaleExtent([1, 8])
-        .translateExtent([
-          [0, 0],
-          [mapWidth, mapHeight]
-        ])
-        .on(
-          'zoom',
-          () => {
-            const {x, y, k} = d3_selection.event.transform;
-            const tx = Math.min(0, Math.max(x, mapWidth - mapWidth*k));
-            const ty = Math.min(0, Math.max(y, mapHeight - mapHeight*k));
-            this.g.attr(
-              'transform',
-              `translate(${tx},${ty})scale(${k})`
-            );
-          }
-        );
+      .scaleExtent([1, 8])
+      .translateExtent([
+        [0, 0],
+        [mapWidth, mapHeight]
+      ])
+      .on(
+        'zoom',
+        () => {
+          const {x, y, k} = d3_selection.event.transform;
+          const tx = Math.min(0, Math.max(x, mapWidth - mapWidth*k));
+          const ty = Math.min(0, Math.max(y, mapHeight - mapHeight*k));
+          this.g.attr(
+            'transform',
+            `translate(${tx},${ty})scale(${k})`
+          );
+        }
+      );
     // map container
-    this.mapContainer = this.container
+    this.mapWrapper = this.container
+      .append('div')
+      .attr('class', 'map-wrapper');
+
+    this.buildDateRangeManager();
+
+    this.mapContainer = this.mapWrapper
       .append('div')
       .attr('class', 'map-container');
 
@@ -158,13 +159,14 @@ class ProtectedLandsApp {
       .append('div')
       .attr('class', 'lands-panel');
 
-    this.buildDateRangeManager();
   }
 
   buildDateRangeManager(){
-    this.rangeContainer = this.detailPanel
+    this.rangeContainer = this.mapWrapper
       .append('div')
-      .attr('class', 'range');
+      .attr('class', 'date-range-container')
+        .append('div')
+        .attr('class', 'range');
 
     this.dateRangeManager = new DateRangeManager({
       container: this.rangeContainer.node()

@@ -12,13 +12,13 @@ export default class DateRangeManager {
     if(this.slider){
       this.slider.destroy();
     }
-    this.params.container.style.height = isLandscape ? '300px' : null;
+    // this.params.container.style.height = isLandscape ? '300px' : null;
     this.slider = noUiSlider.create(
       this.params.container,
       {
         start: [1895, 1950],
-        orientation: isLandscape ? 'vertical' : 'horizontal',
-        direction: isLandscape ? 'rtl' : 'ltr',
+        orientation: 'horizontal',
+        direction: 'ltr',
         connect: true,
         step: 1,
         tooltips: true,
