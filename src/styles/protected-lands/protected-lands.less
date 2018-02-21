@@ -53,6 +53,12 @@
           stroke: #fff;
           stroke-width: 0.1px;
           transition: all 0.2s ease-in-out;
+          pointer-events: none;
+          fill-opacity: 0;
+          &.active {
+            pointer-events: all;
+            fill-opacity: 0.2;
+          }
           &:hover {
             fill-opacity: 1;
           }
@@ -71,11 +77,31 @@
   //   cursor: grabbing;
   // }
 
-  .date-range-container {
-    padding: 1em 0;
-
+  .date-container {
+    padding: 0 0 1em;
+    display: flex;
+    .range-label {
+      padding: 0 0.5em;
+      flex-grow: 0.1;
+      text-align: center;
+    }
+    .start {
+      order: 1;
+    }
+    .end {
+      order: 3;
+    }
+    .noUi-target {
+      flex: 1;
+      order: 2;
+      margin: 4px 0 0 9px;
+      height: 10px;
+      .noUi-handle {
+        transform-origin: 0 0;
+        transform: scale(0.75);
+      }
+    }
     .noUi-horizontal {
-      transform: scale(0.8);
       .noUi-tooltip {
         display: none;
         bottom: auto;

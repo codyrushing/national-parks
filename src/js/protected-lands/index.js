@@ -1,3 +1,4 @@
+import * as d3_array from 'd3-array';
 import * as d3_request from 'd3-request';
 import * as d3_selection from 'd3-selection';
 import * as d3_geo from 'd3-geo';
@@ -43,33 +44,34 @@ class ProtectedLandsApp {
             this.pathGenerator(topojson.mesh(states, states.objects.states))
           );
 
-        this.landsGroup
-          .selectAll('path')
-          .data(topojson.feature(landsTopoJson, landsTopoJson.objects.lands).features)
-          .enter()
-          .append('path')
-          .attr('id', d => d.id)
-          .attr('fill', d => d.properties.fill)
-          .attr(
-            'd',
-            this.pathGenerator
-          )
-          .on(
-            'click',
-            d => {
-              console.log(d.id);
-            }
-          );
+        this.landFeatures = topojson.feature(landsTopoJson, landsTopoJson.objects.lands).features;
 
+        this.landsPaths = this.landsGroup
+          .selectAll('path');
+
+        // join csv metadata with topojson data
         this.landsData = landsData.map(
           l => {
+            const matchingFeature = this.landFeatures.find(f => f.id === `${l.id}_${l.type}`);
+            if(!matchingFeature){
+              return null;
+            }
             return {
-              ...l,
-              date_established: new Date(l.date_established)
+              ...matchingFeature,
+              properties: {
+                ...matchingFeature.properties,
+                ...l,
+                date_established: new Date(l.date_established)
+              }              
             };
           }
-        );
+        )
+        .filter(l => l);
+
         console.log(this.landsData);
+
+        this.buildDateRangeManager();
+
       }
     )
   }
@@ -103,8 +105,6 @@ class ProtectedLandsApp {
     this.mapWrapper = this.container
       .append('div')
       .attr('class', 'map-wrapper');
-
-    this.buildDateRangeManager();
 
     this.mapContainer = this.mapWrapper
       .append('div')
@@ -158,19 +158,75 @@ class ProtectedLandsApp {
     this.detailPanel = this.container
       .append('div')
       .attr('class', 'lands-panel');
-
   }
 
   buildDateRangeManager(){
-    this.rangeContainer = this.mapWrapper
+    this.dateContainer = this.mapWrapper
+      .insert('div', ':first-child')
+      .attr('class', 'date-container');
+
+    this.rangeContainer = this.dateContainer
       .append('div')
-      .attr('class', 'date-range-container')
-        .append('div')
-        .attr('class', 'range');
+      .attr('class', 'range');
+
+    this.dateLabels = [
+      this.dateContainer.append('div')
+        .attr('class', 'range-label start'),
+      this.dateContainer.append('div')
+        .attr('class', 'range-label end')
+    ];
 
     this.dateRangeManager = new DateRangeManager({
-      container: this.rangeContainer.node()
+      container: this.rangeContainer.node(),
+      extent: d3_array.extent(this.landsData, d => d.date_established)
     });
+
+    this.dateRangeManager.slider.on(
+      'update',
+      (values, handleIndex) => {
+        values = values.map(v => parseInt(v, 10));
+        this.dateLabels[handleIndex].text(values[handleIndex]);
+        this.onUpdateDateRange(values);
+      }
+    );
+  }
+
+  getLandIdentifier(land){
+    return `${land.id}_${land.type}`;
+  }
+
+  findLandByIdentifier(identifier){
+    const [id, type] = identifier.split('_');
+    return this.landsData.find(l => l.id === id && l.type === type);
+  }
+
+  onUpdateDateRange(yearRange){
+    const dateRange = [
+      new Date(yearRange[0], 0, 1),
+      new Date(new Date(yearRange[1]+1, 0, 1) - 1)
+    ];
+
+    const activeLands = this.landsData.filter(
+      land => land.date_established >= dateRange[0] && land.date_established <= dateRange[1]
+    );
+
+    this.landsPath
+      .data()
+      .enter()
+      .append('path')
+      .attr('id', d => d.id)
+      .attr('fill', d => d.properties.fill)
+      .attr(
+        'd',
+        this.pathGenerator
+      )
+      .on(
+        'click',
+        d => {
+          console.log(d.id);
+        }
+      );
+
   }
 
   fitToWindow(){
