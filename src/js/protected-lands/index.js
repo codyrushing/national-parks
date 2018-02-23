@@ -33,7 +33,7 @@ class ProtectedLandsApp {
       ([
         states,
         landsTopoJson,
-        landsData
+        landsMetaData
       ]) => {
         this.statesGroup.append('path')
           .attr('class', 'state-borders')
@@ -44,31 +44,27 @@ class ProtectedLandsApp {
             this.pathGenerator(topojson.mesh(states, states.objects.states))
           );
 
-        this.landFeatures = topojson.feature(landsTopoJson, landsTopoJson.objects.lands).features;
-
-        this.landsPaths = this.landsGroup
-          .selectAll('path');
+        const landFeatures = topojson.feature(landsTopoJson, landsTopoJson.objects.lands).features;
 
         // join csv metadata with topojson data
-        this.landsData = landsData.map(
-          l => {
-            const matchingFeature = this.landFeatures.find(f => f.id === `${l.id}_${l.type}`);
-            if(!matchingFeature){
+        this.landsData = landFeatures.map(
+          f => {
+            const matchingLand = landsMetaData.find(l => `${l.id}_${l.type}` === f.id);
+            if(!matchingLand){
               return null;
             }
             return {
-              ...matchingFeature,
+              ...f,
               properties: {
-                ...matchingFeature.properties,
-                ...l,
-                date_established: new Date(l.date_established)
-              }              
+                ...f.properties,
+                ...matchingLand,
+                acreage: parseFloat(matchingLand.acreage),
+                date_established: new Date(matchingLand.date_established)
+              }
             };
           }
         )
         .filter(l => l);
-
-        console.log(this.landsData);
 
         this.buildDateRangeManager();
 
@@ -178,7 +174,7 @@ class ProtectedLandsApp {
 
     this.dateRangeManager = new DateRangeManager({
       container: this.rangeContainer.node(),
-      extent: d3_array.extent(this.landsData, d => d.date_established)
+      extent: d3_array.extent(this.landsData, d => d.properties.date_established)
     });
 
     this.dateRangeManager.slider.on(
@@ -207,11 +203,22 @@ class ProtectedLandsApp {
     ];
 
     const activeLands = this.landsData.filter(
-      land => land.date_established >= dateRange[0] && land.date_established <= dateRange[1]
+      land => land.properties.date_established >= dateRange[0] && land.properties.date_established <= dateRange[1]
     );
 
-    this.landsPath
-      .data()
+    const activeAcres = activeLands.reduce(
+      (acc, v) => acc + v.properties.acreage,
+      0
+    );
+
+    const landsPaths = this.landsGroup
+      .selectAll('path')
+      .data(
+        activeLands,
+        d => d.id
+      );
+
+    landsPaths
       .enter()
       .append('path')
       .attr('id', d => d.id)
@@ -226,6 +233,10 @@ class ProtectedLandsApp {
           console.log(d.id);
         }
       );
+
+      landsPaths
+        .exit()
+        .remove();
 
   }
 

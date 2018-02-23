@@ -34,7 +34,7 @@ export default class DateRangeManager {
     );
   }
   on_resize(){
-    this.build();
+    // this.build();
   }
 
 }
