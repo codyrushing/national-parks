@@ -66,6 +66,13 @@ class ProtectedLandsApp {
         )
         .filter(l => l);
 
+        this.landTypes = this.landsData.reduce(
+          (acc, v) => {
+
+            return acc
+          }
+        )
+
         this.buildDateRangeManager();
 
       }
@@ -154,6 +161,11 @@ class ProtectedLandsApp {
     this.detailPanel = this.container
       .append('div')
       .attr('class', 'lands-panel');
+
+    // build legend
+
+    this.pieCharts = this.detailPanel.append('svg')
+      .attr('class', 'pie-charts');
   }
 
   buildDateRangeManager(){
@@ -172,9 +184,10 @@ class ProtectedLandsApp {
         .attr('class', 'range-label end')
     ];
 
+    const dateExtent = d3_array.extent(this.landsData, d => d.properties.date_established);
     this.dateRangeManager = new DateRangeManager({
       container: this.rangeContainer.node(),
-      extent: d3_array.extent(this.landsData, d => d.properties.date_established)
+      extent: dateExtent
     });
 
     this.dateRangeManager.slider.on(
@@ -185,6 +198,31 @@ class ProtectedLandsApp {
         this.onUpdateDateRange(values);
       }
     );
+
+    const durationSeconds = 6;
+    const stepDurationSeconds = 0.5;
+    const stepCount = Math.round(durationSeconds / stepDurationSeconds);
+    const yearRange = dateExtent[1].getFullYear() - dateExtent[0].getFullYear() + 1;
+    const stepSize = yearRange / stepCount;
+    const autoAdvanceInterval = setInterval(
+      () => {
+        const currentEndYear = parseInt(this.dateRangeManager.slider.get()[1]);
+        const nextEndDate = currentEndYear + stepSize;
+        this.dateRangeManager.slider.set([null, Math.round(nextEndDate)]);
+        if(
+          nextEndDate >= dateExtent[1].getFullYear()
+        ){
+          clearInterval(autoAdvanceInterval);
+        }
+      },
+      stepDurationSeconds * 1000
+    );
+
+    this.rangeContainer.on(
+      'click touchstart mousedown',
+      () => clearInterval(autoAdvanceInterval)
+    );
+
   }
 
   getLandIdentifier(land){
@@ -237,6 +275,10 @@ class ProtectedLandsApp {
       landsPaths
         .exit()
         .remove();
+
+  }
+
+  buildLandsPieCharts(activeLands){
 
   }
 
