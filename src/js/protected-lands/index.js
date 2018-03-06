@@ -2,10 +2,12 @@ import * as d3_array from 'd3-array';
 import * as d3_request from 'd3-request';
 import * as d3_selection from 'd3-selection';
 import * as d3_geo from 'd3-geo';
+import * as d3_shape from 'd3-shape';
 import * as d3_zoom from 'd3-zoom';
 import * as topojson from 'topojson-client';
 import throttle from 'lodash.throttle';
 import { requestJSON } from './utils';
+import BarChart from '../lib/bar-chart';
 import DateRangeManager from './date-range-manager';
 
 const host = `${window.location.protocol}//${window.location.host}`;
@@ -19,6 +21,7 @@ class ProtectedLandsApp {
     document.addEventListener('DOMContentLoaded', this.ready);
     window.addEventListener('resize', throttle(this.fitToWindow, 300));
     this.pathGenerator = d3_geo.geoPath();
+    this.arcGenerator = d3_shape.arch();
     this.fetch();
   }
 
@@ -164,11 +167,33 @@ class ProtectedLandsApp {
 
     // build legend
 
-    this.pieCharts = this.detailPanel.append('svg')
-      .attr('class', 'pie-charts');
+    this.chartsContainer = this.detailPanel.append('div')
+      .attr('class', 'charts-container');
+
+    this.acreageChartContainer = this.chartsContainer.append('div')
+      .attr('class', 'acreage-chart-container');
+
+    this.landsChartContainer = this.chartsContainer.append('div')
+      .attr('class', 'lands-chart-container');
+
+    const graphParams = {
+      showYAxis: false,
+      autoDomainY: false
+    };
+    this.acreageChart = new BarChart(
+      this.acreageChartContainer.node(),
+      graphParams
+    );
+
+    this.landsChart = new BarChart(
+      this.landsChartCon.node(),
+      graphParams
+    );
+
   }
 
   buildDateRangeManager(){
+    const dateExtent = d3_array.extent(this.landsData, d => d.properties.date_established);
     this.dateContainer = this.mapWrapper
       .insert('div', ':first-child')
       .attr('class', 'date-container');
@@ -184,7 +209,6 @@ class ProtectedLandsApp {
         .attr('class', 'range-label end')
     ];
 
-    const dateExtent = d3_array.extent(this.landsData, d => d.properties.date_established);
     this.dateRangeManager = new DateRangeManager({
       container: this.rangeContainer.node(),
       extent: dateExtent
@@ -199,8 +223,8 @@ class ProtectedLandsApp {
       }
     );
 
-    const durationSeconds = 6;
-    const stepDurationSeconds = 0.5;
+    const durationSeconds = 5;
+    const stepDurationSeconds = 0.05;
     const stepCount = Math.round(durationSeconds / stepDurationSeconds);
     const yearRange = dateExtent[1].getFullYear() - dateExtent[0].getFullYear() + 1;
     const stepSize = yearRange / stepCount;
@@ -249,6 +273,38 @@ class ProtectedLandsApp {
       0
     );
 
+    const activeAcresByType = activeLands.reduce(
+      (acc, v) => {
+        let matchingGroup = acc.find(item => item[0] === v.type);
+        if(!matchingGroup){
+          matchingGroup = {
+            type: v.type,
+            acreage: 0
+          };
+          acc.push(matchingGroup);
+        }
+        matchingGroup.acreage += v.acreage;
+        return acc;
+      },
+      []
+    );
+
+    const activeLandsByType = activeLands.reduce(
+      (acc, v) => {
+        let matchingGroup = acc.find(item => item[0] === v.type);
+        if(!matchingGroup){
+          matchingGroup = {
+            type: v.type,
+            acreage: 0
+          };
+          acc.push(matchingGroup);
+        }
+        matchingGroup.acreage += v.acreage;
+        return acc;
+      },
+      []
+    );
+
     const landsPaths = this.landsGroup
       .selectAll('path')
       .data(
@@ -275,10 +331,6 @@ class ProtectedLandsApp {
       landsPaths
         .exit()
         .remove();
-
-  }
-
-  buildLandsPieCharts(activeLands){
 
   }
 
