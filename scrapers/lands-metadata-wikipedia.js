@@ -45,6 +45,62 @@ const fetchParks = () => request({
   }
 );
 
+const fetchShores = () => request({
+  uri: 'https://en.wikipedia.org/wiki/List_of_United_States_national_lakeshores_and_seashores',
+  transform: cheerioTransformer
+})
+.then(
+  $ => {
+    // seashores
+    $('#mw-content-text .wikitable').eq(0).find('tr:not(:first-child)').each(
+      (i, el) => {
+        const columns = $(el).children();
+        const name = columns.eq(0).text().replace('*', '');
+        const id = slugify(name);
+        const detailPageUrl = columns.eq(0).find('a').attr('href');
+        const date_established = new Date(columns.eq(3).find('span:last-child').text());
+        const acreageCell = columns.eq(4);
+        acreageCell.children().remove();
+        const acreage = parseFloat(acreageCell.text().split(' ')[0].replace(/,/g,''));
+        if(mapFeatures.find(f => f.id === `${id}_seashore`)){
+          landsJSON.push({
+            name: name.replace(/[ \t]+$/g, ''),
+            type: 'seashore',
+            id,
+            date_established,
+            detail_page_url: `https://en.wikipedia.org${detailPageUrl}`,
+            acreage
+          });
+        }
+      }
+    );
+
+    // lakeshores
+    $('#mw-content-text .wikitable').eq(1).find('tr:not(:first-child)').each(
+      (i, el) => {
+        const columns = $(el).children();
+        const name = columns.eq(0).text().replace('*', '');
+        const id = slugify(name);
+        const detailPageUrl = columns.eq(0).find('a').attr('href');
+        const date_established = new Date(columns.eq(3).find('span:last-child').text());
+        const acreageCell = columns.eq(4);
+        acreageCell.children().remove();
+        const acreage = parseFloat(acreageCell.text().split(' ')[0].replace(/,/g,''));
+        if(mapFeatures.find(f => f.id === `${id}_lakeshore`)){
+          landsJSON.push({
+            name: name.replace(/[ \t]+$/g, ''),
+            type: 'lakeshore',
+            id,
+            date_established,
+            detail_page_url: `https://en.wikipedia.org${detailPageUrl}`,
+            acreage
+          });
+        }
+      }
+    );
+  }
+);
+
 const fetchForests = () => request({
   uri: 'https://en.wikipedia.org/wiki/List_of_U.S._National_Forests',
   transform: cheerioTransformer
@@ -77,6 +133,94 @@ const fetchForests = () => request({
   }
 );
 
+const fetchPreserves = () => request({
+  uri: 'https://en.wikipedia.org/wiki/List_of_the_United_States_National_Park_System_official_units',
+  transform: cheerioTransformer
+})
+.then(
+  $ => {
+    var preservePromises = [];
+    $('#mw-content-text .wikitable').eq(1).find('tr:not(:first-child)').filter(
+      (i, row) => $(row).find('td').eq(0).text().match(/National Preserve$/)
+    ).each(
+      (i, el) => {
+        preservePromises.push(
+          new Promise(
+            resolve => {
+              const columns = $(el).children();
+              const nameCell = columns.eq(0);
+              const name = nameCell.text();
+              const id = slugify(name.replace(/( National Preserve)$/, ''));
+              const detailPageUrlText = nameCell.find('a').attr('href');
+              const detail_page_url = detailPageUrlText ? `https://en.wikipedia.org${detailPageUrlText}` : null;
+              const preserve = {
+                name,
+                id,
+                type: 'preserve',
+                detail_page_url
+              };
+              if(!mapFeatures.find(f => f.id === `${id}_preserve`)){
+                return resolve(null);
+              }
+              // go to detail page to try and get established date and acreage
+              if(detail_page_url){
+                return request({
+                  uri: detail_page_url,
+                  transform: cheerioTransformer,
+                  acreage: 0
+                })
+                .then(
+                  $ => {
+                    const acreageHeader = $('#mw-content-text .infobox th:contains(Area)');
+                    const dateHeader = $('#mw-content-text .infobox th:contains(Established), #mw-content-text .infobox th:contains(Created), #mw-content-text .infobox th:contains(Authorized)').eq(0);
+                    if(acreageHeader.length){
+                      const acreageCell = acreageHeader.last().next();
+                      acreageCell.children().remove();
+                      try {
+                        const acreage = parseFloat(acreageCell.text().split(' ')[0].replace(/,/g,''));
+                        if(!isNaN(acreage)){
+                          preserve.acreage = acreage;
+                        }
+                      } catch(err) {
+                        console.error(err);
+                      }
+                    }
+                    if(dateHeader.length){
+                      const dateCell = dateHeader.last().next();
+                      dateCell.children().remove();
+                      try {
+                        const dateString = dateCell.html().replace(/&#xA0;|\(.+\)/g, ' ').split('\n')[0].trim();
+                        const date_established = new Date(dateString);
+                        if(date_established){
+                          preserve.date_established = date_established;
+                        }
+                      } catch(err) {
+                        console.error(err);
+                      }
+                    }
+                    resolve(preserve);
+                  }
+                );
+              }
+              return resolve(preserve);
+            }
+          )
+          .then(
+            preserve => {
+              if(preserve){
+                landsJSON.push({
+                  acreage: 0,
+                  ...preserve
+                });
+              }
+            }
+          )
+        );
+      }
+    );
+    return Promise.all(preservePromises);
+  }
+);
 
 const fetchMonuments = () => request({
   uri: 'https://en.wikipedia.org/wiki/List_of_National_Monuments_of_the_United_States',
@@ -147,10 +291,10 @@ const fetchMonuments = () => request({
   }
 );
 
-
-
 fetchParks()
   .then(fetchMonuments)
+  .then(fetchPreserves)
+  .then(fetchShores)
   .then(fetchForests)
   .then(
     () => fs.writeFileSync(

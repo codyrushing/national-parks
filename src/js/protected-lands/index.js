@@ -7,7 +7,8 @@ import * as d3_zoom from 'd3-zoom';
 import * as topojson from 'topojson-client';
 import throttle from 'lodash.throttle';
 import { requestJSON } from './utils';
-import BarChart from '../lib/bar-chart';
+import AcreageChart from './acreage-chart';
+import LandsChart from './lands-chart';
 import DateRangeManager from './date-range-manager';
 
 const host = `${window.location.protocol}//${window.location.host}`;
@@ -21,7 +22,7 @@ class ProtectedLandsApp {
     document.addEventListener('DOMContentLoaded', this.ready);
     window.addEventListener('resize', throttle(this.fitToWindow, 300));
     this.pathGenerator = d3_geo.geoPath();
-    this.arcGenerator = d3_shape.arch();
+    this.arcGenerator = d3_shape.arc();
     this.fetch();
   }
 
@@ -180,13 +181,13 @@ class ProtectedLandsApp {
       showYAxis: false,
       autoDomainY: false
     };
-    this.acreageChart = new BarChart(
+    this.acreageChart = new AcreageChart(
       this.acreageChartContainer.node(),
       graphParams
     );
 
-    this.landsChart = new BarChart(
-      this.landsChartCon.node(),
+    this.landsChart = new LandsChart(
+      this.landsChartContainer.node(),
       graphParams
     );
 
@@ -273,9 +274,9 @@ class ProtectedLandsApp {
       0
     );
 
-    const activeAcresByType = activeLands.reduce(
+    const activeAcresByType = activeLands.map(l => l.properties).reduce(
       (acc, v) => {
-        let matchingGroup = acc.find(item => item[0] === v.type);
+        let matchingGroup = acc.find(item => item.type === v.type);
         if(!matchingGroup){
           matchingGroup = {
             type: v.type,
@@ -289,21 +290,7 @@ class ProtectedLandsApp {
       []
     );
 
-    const activeLandsByType = activeLands.reduce(
-      (acc, v) => {
-        let matchingGroup = acc.find(item => item[0] === v.type);
-        if(!matchingGroup){
-          matchingGroup = {
-            type: v.type,
-            acreage: 0
-          };
-          acc.push(matchingGroup);
-        }
-        matchingGroup.acreage += v.acreage;
-        return acc;
-      },
-      []
-    );
+    console.log(activeAcresByType);
 
     const landsPaths = this.landsGroup
       .selectAll('path')

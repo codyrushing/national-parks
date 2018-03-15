@@ -12,7 +12,10 @@ export default class Chart {
     return this;
   }
   updateParams(params){
-    this.params = merge(this.params, params);
+    this.params = {
+      ...this.params,
+      ...params
+    };
   }
   get defaultParams(){
     return {

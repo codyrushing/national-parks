@@ -1,4 +1,4 @@
-import * d3_axis from 'd3-axis';
+import * as d3_axis from 'd3-axis';
 
 export const generateTickValuesInclusive = ({scale, tickSeparation=120, minTickThreshold=60, valueAccessor=v => v}) => {
   const min = scale.domain()[0];

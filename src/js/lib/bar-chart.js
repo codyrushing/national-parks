@@ -29,7 +29,7 @@ export default class DiscreteBarChart extends Chart {
     const { margins, chartClass, resizable, showValues, showXAxis, showYAxis} = this.params;
     const { width, height } = this.dimensions;
 
-    this.svg = d3_seleection.select(this.container).append('svg')
+    this.svg = d3_selection.select(this.container).append('svg')
       .attr('class', ['bar-chart', chartClass].join(' '))
       .attr('transform-origin', '0 0 0');
 
@@ -195,17 +195,6 @@ export default class DiscreteBarChart extends Chart {
   }
 
   updateDomain(){
-
-  }
-
-  draw(){
-    const { resizable, margins, showValues, animationDuration, autoDomainX, autoDomainY } = this.params;
-    const { width, height } = this.dimensions;
-
-    if(!this.data) {
-      return;
-    }
-
     if(autoDomainX){
       this.x.domain(this.data.map(this.keyAccessor));
     }
@@ -216,10 +205,21 @@ export default class DiscreteBarChart extends Chart {
         )
       );
     }
+  }
+
+  draw(){
+    const { resizable, margins, showValues, animationDuration, autoDomainX, autoDomainY } = this.params;
+    const { width, height } = this.dimensions;
+
+    if(!this.data) {
+      return;
+    }
 
     if(resizable){
       this.fitToSize();
     }
+
+    this.updateDomain();
 
     const zero = this.y(0);
 
