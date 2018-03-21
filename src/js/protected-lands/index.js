@@ -8,7 +8,6 @@ import * as topojson from 'topojson-client';
 import throttle from 'lodash.throttle';
 import { requestJSON } from './utils';
 import AcreageChart from './acreage-chart';
-import LandsChart from './lands-chart';
 import DateRangeManager from './date-range-manager';
 
 const host = `${window.location.protocol}//${window.location.host}`;
@@ -70,12 +69,28 @@ class ProtectedLandsApp {
         )
         .filter(l => l);
 
-        this.landTypes = this.landsData.reduce(
-          (acc, v) => {
+        this.allLandsGroupedByType = this.getAcresGroupedByType(this.landsData);
+        this.landTypes = this.allLandsGroupedByType
+          .sort(
+            (a, b) => b.acreage - a.acreage
+          )
+          .map(d => d.type);
 
-            return acc
-          }
-        )
+        if(this.acreageChart){
+          this.acreageChart.x.domain(this.landTypes);
+
+          this.acreageChart.y.domain([
+            0,
+            d3_array.max(this.allLandsGroupedByType.map(d => d.acreage))
+          ]);
+        }
+
+        // this.landTypes = this.landsData.reduce(
+        //   (acc, v) => {
+        //
+        //     return acc
+        //   }
+        // )
 
         this.buildDateRangeManager();
 
@@ -174,20 +189,27 @@ class ProtectedLandsApp {
     this.acreageChartContainer = this.chartsContainer.append('div')
       .attr('class', 'acreage-chart-container');
 
-    this.landsChartContainer = this.chartsContainer.append('div')
-      .attr('class', 'lands-chart-container');
-
     const graphParams = {
       showYAxis: false,
-      autoDomainY: false
+      showXAxis: false,
+      chartClass: 'acreage-chart',
+      autoDomainX: false,
+      autoDomainY: false,
+      autoSize: false,
+      width: 200,
+      height: 170,
+      animationDuration: 0,
+      showValues: true,
+      margins: {
+        top: 30,
+        right: 0,
+        bottom: 1,
+        left: 0
+      }
     };
+
     this.acreageChart = new AcreageChart(
       this.acreageChartContainer.node(),
-      graphParams
-    );
-
-    this.landsChart = new LandsChart(
-      this.landsChartContainer.node(),
       graphParams
     );
 
@@ -224,7 +246,7 @@ class ProtectedLandsApp {
       }
     );
 
-    const durationSeconds = 5;
+    const durationSeconds = 8;
     const stepDurationSeconds = 0.05;
     const stepCount = Math.round(durationSeconds / stepDurationSeconds);
     const yearRange = dateExtent[1].getFullYear() - dateExtent[0].getFullYear() + 1;
@@ -259,6 +281,24 @@ class ProtectedLandsApp {
     return this.landsData.find(l => l.id === id && l.type === type);
   }
 
+  getAcresGroupedByType(data){
+    return data.map(l => l.properties).reduce(
+      (acc, v) => {
+        let matchingGroup = acc.find(item => item.type === v.type);
+        if(!matchingGroup){
+          matchingGroup = {
+            type: v.type,
+            acreage: 0
+          };
+          acc.push(matchingGroup);
+        }
+        matchingGroup.acreage = Math.round(matchingGroup.acreage + v.acreage);
+        return acc;
+      },
+      []
+    );
+  }
+
   onUpdateDateRange(yearRange){
     const dateRange = [
       new Date(yearRange[0], 0, 1),
@@ -269,28 +309,15 @@ class ProtectedLandsApp {
       land => land.properties.date_established >= dateRange[0] && land.properties.date_established <= dateRange[1]
     );
 
-    const activeAcres = activeLands.reduce(
-      (acc, v) => acc + v.properties.acreage,
+    const activeAcresByType = this.getAcresGroupedByType(activeLands)
+      .sort(
+        (a, b) => b.acreage - a.acreage
+      );
+
+    const activeAcres = activeAcresByType.reduce(
+      (acc, v) => acc + v.acreage,
       0
     );
-
-    const activeAcresByType = activeLands.map(l => l.properties).reduce(
-      (acc, v) => {
-        let matchingGroup = acc.find(item => item.type === v.type);
-        if(!matchingGroup){
-          matchingGroup = {
-            type: v.type,
-            acreage: 0
-          };
-          acc.push(matchingGroup);
-        }
-        matchingGroup.acreage += v.acreage;
-        return acc;
-      },
-      []
-    );
-
-    console.log(activeAcresByType);
 
     const landsPaths = this.landsGroup
       .selectAll('path')
@@ -315,14 +342,14 @@ class ProtectedLandsApp {
         }
       );
 
-      landsPaths
-        .exit()
-        .remove();
+    landsPaths
+      .exit()
+      .remove();
 
+    this.acreageChart.update(activeAcresByType);
   }
 
   fitToWindow(){
-
     // this.svg
     //   .attr('width', window.innerWidth)
     //   .attr('height', window.innerWidth / aspectRatio);

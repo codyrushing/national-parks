@@ -5,10 +5,14 @@
 #public-lands-app {
   display: flex;
   border-bottom: 1px solid @dark-gray;
+  flex-direction: column;
+  @media (min-aspect-ratio: 4/3) {
+    flex-direction: row;
+  }
 }
 
 .map-wrapper {
-  flex-grow: 2;
+  flex: 1;
   padding: 1em 0 0;
   .buttons-container {
     position: absolute;
@@ -111,7 +115,12 @@
 }
 
 .lands-panel {
-  flex-grow: 1;
+  padding: 1em;
   background: @light-gray;
   border-left: 1px solid @dark-gray;
+  .acreage-chart {
+    text.value {
+      font-size: 0.6em;
+    }
+  }
 }

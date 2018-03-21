@@ -25,6 +25,15 @@ export default class DiscreteBarChart extends Chart {
       }
     }
   }
+  init(){
+    if(typeof this.params.keyAccessor === 'function'){
+      this.keyAccessor = this.params.keyAccessor.bind(this);
+    }
+    if(typeof this.params.valueAccessor === 'function'){
+      this.valueAccessor = this.params.valueAccessor.bind(this);
+    }
+    super.init();
+  }
   initDOM(){
     const { margins, chartClass, resizable, showValues, showXAxis, showYAxis} = this.params;
     const { width, height } = this.dimensions;
@@ -155,7 +164,6 @@ export default class DiscreteBarChart extends Chart {
 
   buildXAxis(){
     const { height } = this.dimensions;
-
     return d3_axis.axisBottom(this.x)
       .tickFormat(this.params.tickFormats.x)
       .tickPadding(10)
@@ -195,6 +203,7 @@ export default class DiscreteBarChart extends Chart {
   }
 
   updateDomain(){
+    const { autoDomainX, autoDomainY } = this.params;
     if(autoDomainX){
       this.x.domain(this.data.map(this.keyAccessor));
     }
@@ -208,7 +217,7 @@ export default class DiscreteBarChart extends Chart {
   }
 
   draw(){
-    const { resizable, margins, showValues, animationDuration, autoDomainX, autoDomainY } = this.params;
+    const { resizable, margins, showValues, animationDuration } = this.params;
     const { width, height } = this.dimensions;
 
     if(!this.data) {
@@ -254,7 +263,7 @@ export default class DiscreteBarChart extends Chart {
         .append('rect')
           .attr('x', 0)
           // every bar starts out at 0, then gets updated
-          .attr('y', this.y(0))
+          .attr('y', this.y(0)-1)
           .attr('fill', d => this.getColor(d));
 
     this.barsEnterUpdate
@@ -266,8 +275,11 @@ export default class DiscreteBarChart extends Chart {
           .attr('y', d => this.getYPosition(d))
           .attr('height', d => {
             const val = this.valueAccessor(d);
-            return Math.abs(
-              this.y(val) - this.y(0)
+            return Math.max(
+              Math.abs(
+                this.y(val) - this.y(0)
+              ),
+              1
             );
           });
 
@@ -283,11 +295,9 @@ export default class DiscreteBarChart extends Chart {
           .text(d => this.formatValueLabel(d))
           .transition()
           .duration(animationDuration)
-          .attr('y', d => {
-            return this.y(d.value);
-          })
+          .attr('y', d => this.getYPosition(d))
           .attr('dy', d => {
-            return d.value >= 0 ? '-0.35em' : '1em';
+            return this.valueAccessor(d) >= 0 ? '-0.35em' : '1em';
           })
       }
       if(this.baseLine){
