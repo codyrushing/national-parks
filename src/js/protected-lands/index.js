@@ -6,7 +6,7 @@ import * as d3_shape from 'd3-shape';
 import * as d3_zoom from 'd3-zoom';
 import * as topojson from 'topojson-client';
 import throttle from 'lodash.throttle';
-import { requestJSON } from './utils';
+import { requestJSON, capitalize, getColorForLandType } from './utils';
 import AcreageChart from './acreage-chart';
 import DateRangeManager from './date-range-manager';
 
@@ -92,6 +92,7 @@ class ProtectedLandsApp {
         //   }
         // )
 
+        this.buildLegend();
         this.buildDateRangeManager();
 
       }
@@ -154,6 +155,11 @@ class ProtectedLandsApp {
       .append('g')
       .attr('class', 'lands');
 
+    // legend
+    this.legendContainer = this.mapContainer
+      .append('div')
+      .attr('class', 'legend');
+
     // zoom buttons
     this.buttonContainer = this.mapContainer
       .append('div')
@@ -181,8 +187,6 @@ class ProtectedLandsApp {
       .append('div')
       .attr('class', 'lands-panel');
 
-    // build legend
-
     this.chartsContainer = this.detailPanel.append('div')
       .attr('class', 'charts-container');
 
@@ -191,7 +195,7 @@ class ProtectedLandsApp {
 
     const graphParams = {
       showYAxis: false,
-      showXAxis: false,
+      // showXAxis: false,
       chartClass: 'acreage-chart',
       autoDomainX: false,
       autoDomainY: false,
@@ -203,7 +207,7 @@ class ProtectedLandsApp {
       margins: {
         top: 30,
         right: 0,
-        bottom: 1,
+        bottom: 0,
         left: 0
       }
     };
@@ -213,6 +217,22 @@ class ProtectedLandsApp {
       graphParams
     );
 
+  }
+
+  buildLegend(){
+    this.legendItems = this.legendContainer
+      .append('ul')
+        .selectAll('li')
+
+        .data(this.landTypes)
+        .enter()
+        .append('li')
+        .text(d => capitalize(d));
+
+    this.legendItems
+      .append('span')
+      .attr('class', 'icon')
+      .style('background-color', d => getColorForLandType(d));
   }
 
   buildDateRangeManager(){

@@ -263,7 +263,7 @@ export default class DiscreteBarChart extends Chart {
         .append('rect')
           .attr('x', 0)
           // every bar starts out at 0, then gets updated
-          .attr('y', this.y(0)-1)
+          .attr('y', this.y(0))
           .attr('fill', d => this.getColor(d));
 
     this.barsEnterUpdate
@@ -272,7 +272,7 @@ export default class DiscreteBarChart extends Chart {
         .attr('width', this.x.bandwidth())
         .transition()
         .duration(animationDuration)
-          .attr('y', d => this.getYPosition(d))
+          .attr('y', d => Math.min(this.getYPosition(d), this.y(0) -1))
           .attr('height', d => {
             const val = this.valueAccessor(d);
             return Math.max(
