@@ -1,7 +1,7 @@
 # national-parks
 A viz project chronicling the history of national parks in the US
 
-* There are lots of protected land types.  Parks, wilderness, monuments are what I am going to focus on.  National Preserves are kind of like parks, but they sometimes allow oil and gas exploration so I'm going to exclude them
+* There are lots of protected land types.  Parks, wilderness, monuments are what I am going to focus on.  
 * Scrape establishment dates and acreage from wikipedia [https://en.wikipedia.org/wiki/List_of_national_parks_of_the_United_States](https://en.wikipedia.org/wiki/List_of_national_parks_of_the_United_States)
 [https://en.wikipedia.org/wiki/List_of_National_Monuments_of_the_United_States](https://en.wikipedia.org/wiki/List_of_National_Monuments_of_the_United_States)
 * This is the projection to use [https://github.com/d3/d3-geo#geoAlbersUsa](https://github.com/d3/d3-geo#geoAlbersUsa)
