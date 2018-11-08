@@ -1,5 +1,6 @@
 import * as d3_format from 'd3-format';
 import BarChart from '../lib/bar-chart';
+import { getColorForLandType } from './utils';
 
 export default class AcreageChart extends BarChart {
   valueAccessor(d){
@@ -7,6 +8,9 @@ export default class AcreageChart extends BarChart {
   }
   keyAccessor(d){
     return d.type;
+  }
+  getColor(d){
+    return getColorForLandType(this.keyAccessor(d));
   }
   formatValueLabel(d){
     const value = this.valueAccessor(d);

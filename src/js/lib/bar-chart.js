@@ -14,6 +14,7 @@ export default class DiscreteBarChart extends Chart {
       showXAxis: true,
       showYAxis: true,
       showValues: false,
+      showTicks: true,
       animationDuration: 200,
       tickFormats: {
         x: d => d,
@@ -163,12 +164,13 @@ export default class DiscreteBarChart extends Chart {
   }
 
   buildXAxis(){
+    const { showTicks } = this.params;
     const { height } = this.dimensions;
     return d3_axis.axisBottom(this.x)
       .tickFormat(this.params.tickFormats.x)
       .tickPadding(10)
       .tickSizeOuter(0)
-      .tickSizeInner(-height);
+      .tickSizeInner(showTicks ? -height : 0);
   }
 
   buildYAxis(){
@@ -284,6 +286,11 @@ export default class DiscreteBarChart extends Chart {
           });
 
       if(showValues){
+        let labelHeight = 15;
+        this.barsEnter
+          .append('rect')
+          .attr('class', 'background');
+
         this.barsEnter
           .append('text')
           .attr('class', 'value')
@@ -298,7 +305,14 @@ export default class DiscreteBarChart extends Chart {
           .attr('y', d => this.getYPosition(d))
           .attr('dy', d => {
             return this.valueAccessor(d) >= 0 ? '-0.35em' : '1em';
-          })
+          });
+
+        this.barsEnterUpdate
+          .select('rect.background')
+          .attr('fill', '#fff')
+          .attr('y', d => this.getYPosition(d) - labelHeight)
+          .attr('width', this.x.bandwidth())
+          .attr('height', labelHeight);
       }
       if(this.baseLine){
         this.baseLine.raise();

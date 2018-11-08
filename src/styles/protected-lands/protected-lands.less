@@ -45,13 +45,34 @@
     position: absolute;
     bottom: 0;
     right: 0;
-    height: 100px;
-    width: 30px;
     background: #fff;
+    padding: 0.5rem;
     border-radius: 0.5em 0 0;
     border-color: @dark-gray;
     border-style: solid;
     border-width: 1px 0 0 1px;
+    ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    li {
+      padding: 0.1rem 0;
+      font-size: 0.8rem;
+      &:first-child {
+        padding-top: 0;
+      }
+      &:last-child {
+        padding-bottom: 0;
+      }
+    }
+    i {
+      display: inline-block;
+      width: 0.9em;
+      height: 0.9em;
+      vertical-align: middle;
+      margin: 0 0.1em 0.2rem 0;
+    }
   }
 
   .map-container {

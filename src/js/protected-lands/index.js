@@ -204,6 +204,7 @@ class ProtectedLandsApp {
       height: 170,
       animationDuration: 0,
       showValues: true,
+      showTicks: false,
       margins: {
         top: 30,
         right: 0,
@@ -223,16 +224,19 @@ class ProtectedLandsApp {
     this.legendItems = this.legendContainer
       .append('ul')
         .selectAll('li')
-
         .data(this.landTypes)
         .enter()
-        .append('li')
-        .text(d => capitalize(d));
+        .append('li');
+
+    this.legendItems
+      .append('i')
+      .attr('class', 'icon')
+      .style('background-color', d => getColorForLandType(d));
 
     this.legendItems
       .append('span')
-      .attr('class', 'icon')
-      .style('background-color', d => getColorForLandType(d));
+      .text(d => capitalize(d));
+
   }
 
   buildDateRangeManager(){
@@ -301,8 +305,8 @@ class ProtectedLandsApp {
     return this.landsData.find(l => l.id === id && l.type === type);
   }
 
-  getAcresGroupedByType(data){
-    return data.map(l => l.properties).reduce(
+  getAcresGroupedByType(data, master=[]){
+    data = data.map(l => l.properties).reduce(
       (acc, v) => {
         let matchingGroup = acc.find(item => item.type === v.type);
         if(!matchingGroup){
@@ -317,6 +321,16 @@ class ProtectedLandsApp {
       },
       []
     );
+    if(master.length){
+      return this.allLandsGroupedByType.map(
+        group => {
+          const matchingGroup = data.find(g => g.type === group.type);
+          group.acreage = matchingGroup ? matchingGroup.acreage : 0;
+          return group;
+        }
+      );
+    }
+    return data;
   }
 
   onUpdateDateRange(yearRange){
@@ -329,15 +343,12 @@ class ProtectedLandsApp {
       land => land.properties.date_established >= dateRange[0] && land.properties.date_established <= dateRange[1]
     );
 
-    const activeAcresByType = this.getAcresGroupedByType(activeLands)
+    const activeAcresByType = this.getAcresGroupedByType(activeLands, this.allLandsGroupedByType)
       .sort(
         (a, b) => b.acreage - a.acreage
       );
 
-    const activeAcres = activeAcresByType.reduce(
-      (acc, v) => acc + v.acreage,
-      0
-    );
+    // console.log(this.allLandsGroupedByType);
 
     const landsPaths = this.landsGroup
       .selectAll('path')
@@ -358,7 +369,7 @@ class ProtectedLandsApp {
       .on(
         'click',
         d => {
-          console.log(d.id);
+          console.log(d);
         }
       );
 
